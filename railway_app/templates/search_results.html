@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block title %}Search Results - Railway Ticket System{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h2>Available Trains</h2>
+            <p class="text-muted">From: <strong id="fromStation"></strong> | To: <strong id="toStation"></strong> | Date: <strong id="journeyDate"></strong></p>
+        </div>
+    </div>
+    
+    <!-- Direct Trains -->
+    <div class="row mb-5" id="directTrainsContainer"></div>
+    
+    <!-- Connecting Trains -->
+    <div class="row" id="connectingTrainsContainer"></div>
+    
+    <div id="noResults" class="alert alert-info mt-4" style="display:none;">
+        <i class="bi bi-info-circle"></i> No trains found. Please try different dates or stations.
+    </div>
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const source_id = params.get('source_id');
+const destination_id = params.get('destination_id');
+const journey_date = params.get('journey_date');
+const seat_class = params.get('seat_class');
+
+async function loadSearchResults() {
+    const response = await fetch('/search/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: JSON.stringify({ source_id, destination_id, journey_date, seat_class })
+    });
+
+    const data = await response.json();
+
+    // Display station info
+    if (data.direct_trains.length > 0) {
+        document.getElementById('fromStation').textContent = data.direct_trains[0].from;
+        document.getElementById('toStation').textContent = data.direct_trains[0].to;
+    }
+    document.getElementById('journeyDate').textContent = journey_date;
+
+    // Display direct trains
+    const directContainer = document.getElementById('directTrainsContainer');
+    if (data.direct_trains.length > 0) {
+        directContainer.innerHTML = '<div class="col-12 mb-3"><h4>Direct Trains</h4></div>';
+        data.direct_trains.forEach(train => {
+            directContainer.innerHTML += `
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5>${train.train_number} - ${train.train_name}</h5>
+                            <p class="text-muted">${train.from} → ${train.to}</p>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span><i class="bi bi-clock"></i> ${train.departure} - ${train.arrival}</span>
+                                <span><strong>₹${train.fare}</strong></span>
+                            </div>
+                            <small class="text-muted">Distance: ${train.distance}km | Duration: ${train.duration}</small>
+                            <br>
+                            <small class="text-success">Seats Available: ${train.available_seats}</small>
+                            <a href="/booking/?schedule_id=${train.schedule_id}&route_id=${train.route_id}&seat_class=${seat_class}" class="btn btn-sm btn-primary mt-2">
+                                Book Now
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    // Display connecting trains
+    const connectingContainer = document.getElementById('connectingTrainsContainer');
+    if (data.connecting_trains.length > 0) {
+        connectingContainer.innerHTML = '<div class="col-12 mb-3"><h4>Connecting Routes</h4></div>';
+        data.connecting_trains.forEach(conn => {
+            connectingContainer.innerHTML += `
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="badge bg-info mb-2">2-Leg Journey</h6>
+                            <p><strong>Leg 1:</strong> ${conn.leg_1_train} (${conn.leg_1_from} → ${conn.leg_1_to})</p>
+                            <p class="text-muted small">${conn.leg_1_departure} → ${conn.leg_1_arrival}</p>
+
+                            <p class="text-center text-warning small"><i class="bi bi-hourglass-split"></i> Connection: ${conn.buffer_minutes} mins</p>
+
+                            <p><strong>Leg 2:</strong> ${conn.leg_2_train} (${conn.leg_2_from} → ${conn.leg_2_to})</p>
+                            <p class="text-muted small">${conn.leg_2_departure} → ${conn.leg_2_arrival}</p>
+
+                            <div class="d-flex justify-content-between mt-3">
+                                <span><strong>₹${conn.total_fare}</strong></span>
+                                <small class="text-muted">${conn.total_distance}km</small>
+                            </div>
+
+                            <a href="/booking/?schedule_id=${conn.leg_1_schedule}&leg_2_schedule_id=${conn.leg_2_schedule}&seat_class=${seat_class}" class="btn btn-sm btn-primary mt-2 w-100">
+                                Book Now
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    } else if (data.connecting_trains.length === 0) {
+        // Show login prompt for connecting trains if user is not authenticated
+        connectingContainer.innerHTML = `
+            <div class="col-12 mb-3">
+                <div class="alert alert-info">
+                    <h5><i class="bi bi-lock"></i> Connecting Trains Require Login</h5>
+                    <p>Login to access connecting train routes and enjoy more travel options.</p>
+                    <a href="/login/" class="btn btn-primary">Login Now</a>
+                </div>
+            </div>
+        `;
+    }
+
+    if (data.direct_trains.length === 0 && data.connecting_trains.length === 0) {
+        document.getElementById('noResults').style.display = 'block';
+    }
+}
+
+loadSearchResults();
+</script>
+{% endblock %}

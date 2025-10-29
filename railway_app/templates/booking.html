@@ -1,0 +1,330 @@
+{% extends 'base.html' %}
+{% block title %}Complete Booking - Railway Ticket System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <!-- Journey Summary -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Journey Summary</h5>
+                </div>
+                <div class="card-body">
+                    {% for schedule in schedules %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="row align-items-center">
+                            <div class="col-md-2 text-center">
+                                <h6 class="text-muted">{{ schedule.route.source.code }}</h6>
+                                <small class="text-muted">{{ schedule.route.source.name }}</small>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="text-center">
+                                    <strong>{{ schedule.route.train.train_number }}</strong>
+                                    <p class="small text-muted">{{ schedule.route.train.train_name }}</p>
+                                    <small class="text-muted">{{ schedule.route.train.get_train_type_display }}</small>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-2 text-center">
+                                <h6 class="text-muted">{{ schedule.route.destination.code }}</h6>
+                                <small class="text-muted">{{ schedule.route.destination.name }}</small>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <table class="table table-sm mb-0">
+                                    <tr>
+                                        <td><strong>Departure:</strong></td>
+                                        <td class="text-end">{{ schedule.departure_time|time:"H:i" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Arrival:</strong></td>
+                                        <td class="text-end">{{ schedule.arrival_time|time:"H:i" }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Distance:</strong></td>
+                                        <td class="text-end">{{ schedule.route.distance }} km</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Duration:</strong></td>
+                                        <td class="text-end">{{ schedule.route.duration_hours }}h {{ schedule.route.duration_minutes }}m</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    {% if not forloop.last %}<hr>{% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Passenger Details Form -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-person"></i> Passenger Information</h5>
+                </div>
+                <div class="card-body">
+                    <form id="bookingForm">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Full Name *</label>
+                                <input type="text" class="form-control" id="passenger_name" placeholder="Enter full name" required>
+                                <small class="form-text text-muted">As per ID proof</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email Address *</label>
+                                <input type="email" class="form-control" id="passenger_email" placeholder="your.email@example.com" required>
+                                <small class="form-text text-muted">For ticket confirmation</small>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Phone Number *</label>
+                                <input type="tel" class="form-control" id="passenger_phone" placeholder="10-digit number" pattern="[0-9]{10}" required>
+                                <small class="form-text text-muted">10-digit mobile number</small>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Age *</label>
+                                <input type="number" class="form-control" id="passenger_age" min="1" max="120" placeholder="Age" required>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">Gender *</label>
+                                <select class="form-control" id="passenger_gender" required>
+                                    <option value="">Select Gender</option>
+                                    <option value="M">Male</option>
+                                    <option value="F">Female</option>
+                                    <option value="O">Other</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Seat Class *</label>
+                                <select class="form-control" id="seat_class_select" required>
+                                    <option value="">Select Seat Class</option>
+                                    <option value="AC_FIRST">AC First Class - Premium</option>
+                                    <option value="AC_2_TIER">AC 2-Tier - Comfortable</option>
+                                    <option value="AC_3_TIER">AC 3-Tier - Standard</option>
+                                    <option value="SLEEPER">Sleeper - Budget</option>
+                                    <option value="GENERAL">General - Economy</option>
+                                </select>
+                                <small class="form-text text-muted">Choose your preferred class</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Seat Number *</label>
+                                <input type="text" class="form-control" id="seat_number" placeholder="e.g., 1A, 32C, 45D" pattern="[0-9]{1,2}[A-Z]" required>
+                                <small class="form-text text-muted">Format: Number + Letter (e.g., 1A)</small>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info" role="alert">
+                            <i class="bi bi-info-circle"></i> 
+                            <strong>Important:</strong> Please verify all details carefully. Once confirmed, changes cannot be made.
+                        </div>
+
+                        <button type="submit" class="btn btn-success btn-lg w-100">
+                            <i class="bi bi-credit-card"></i> Proceed to Payment
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fare Summary Sidebar -->
+        <div class="col-md-4">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-receipt"></i> Fare Summary</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <td>Base Fare</td>
+                            <td class="text-end fw-bold">₹<span id="baseFare">{{ total_fare }}</span></td>
+                        </tr>
+                        <tr>
+                            <td>GST (5%)</td>
+                            <td class="text-end">₹<span id="gstAmount">0.00</span></td>
+                        </tr>
+                        <tr>
+                            <td>Convenience Fee</td>
+                            <td class="text-end">₹<span id="convFee">50.00</span></td>
+                        </tr>
+                        <tr class="table-active fw-bold border-top border-bottom">
+                            <td>Total Amount</td>
+                            <td class="text-end text-success" style="font-size: 1.2rem;">
+                                ₹<span id="totalAmount">0.00</span>
+                            </td>
+                        </tr>
+                    </table>
+                    
+                    <hr>
+                    
+                    <div class="card bg-light mb-3">
+                        <div class="card-body p-2">
+                            <h6 class="card-title">Journey Details</h6>
+                            {% for schedule in schedules %}
+                            <small class="d-block mb-2">
+                                <strong>{{ schedule.route.train.train_number }}</strong>
+                                {{ schedule.route.source.code }} → {{ schedule.route.destination.code }}
+                                <br>
+                                <i class="bi bi-clock"></i> {{ schedule.departure_time|time:"H:i" }} - {{ schedule.arrival_time|time:"H:i" }}
+                            </small>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-warning" role="alert">
+                        <small>
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <strong>Refund Policy:</strong> 90% refund available for cancellations made 24 hours before departure.
+                        </small>
+                    </div>
+                    
+                    <div class="alert alert-info" role="alert">
+                        <small>
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Note:</strong> Confirmation email will be sent to your registered email address.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>  
+
+<script>
+// Store the base fare and schedule IDs
+const totalFare = parseFloat('{{ total_fare }}');
+const scheduleIds = [
+    {% for schedule in schedules %}
+        {{ schedule.id }}{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+const journeyDate = '{{ journey_date|date:"Y-m-d" }}';
+
+// Initialize fare calculation
+function updateFareBreakdown() {
+    const baseFare = totalFare;
+    const gst = baseFare * 0.05;
+    const convFee = 50.00;
+    const total = baseFare + gst + convFee;
+    
+    document.getElementById('baseFare').textContent = baseFare.toFixed(2);
+    document.getElementById('gstAmount').textContent = gst.toFixed(2);
+    document.getElementById('convFee').textContent = convFee.toFixed(2);
+    document.getElementById('totalAmount').textContent = total.toFixed(2);
+}
+
+// Call on page load
+updateFareBreakdown();
+
+// Handle booking form submission
+document.getElementById('bookingForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Get form values
+    const passenger_name = document.getElementById('passenger_name').value.trim();
+    const passenger_email = document.getElementById('passenger_email').value.trim();
+    const passenger_phone = document.getElementById('passenger_phone').value.trim();
+    const passenger_age = parseInt(document.getElementById('passenger_age').value);
+    const passenger_gender = document.getElementById('passenger_gender').value;
+    const seat_class = document.getElementById('seat_class_select').value;
+    const seat_number = document.getElementById('seat_number').value.trim().toUpperCase();
+    
+    // Validation
+    if (!passenger_name || !passenger_email || !passenger_phone || !passenger_gender || !seat_class || !seat_number) {
+        alert('Please fill all required fields');
+        return;
+    }
+    
+    if (passenger_phone.length !== 10 || isNaN(passenger_phone)) {
+        alert('Please enter a valid 10-digit phone number');
+        return;
+    }
+    
+    if (passenger_age < 1 || passenger_age > 120) {
+        alert('Please enter a valid age (1-120)');
+        return;
+    }
+    
+    // Calculate final amount
+    const gst = totalFare * 0.05;
+    const convFee = 50.00;
+    const totalAmount = totalFare + gst + convFee;
+    
+    // Prepare booking data
+    const bookingData = {
+        passenger_name: passenger_name,
+        passenger_email: passenger_email,
+        passenger_phone: passenger_phone,
+        passenger_age: passenger_age,
+        passenger_gender: passenger_gender,
+        seat_class: seat_class,
+        journey_date: journeyDate,
+        schedule_ids: scheduleIds,
+        seat_numbers: [seat_number],
+        total_fare: totalAmount.toFixed(2),
+    };
+    
+    // Disable submit button
+    const submitBtn = document.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+    
+    try {
+        // Send booking request
+        const response = await fetch('/booking/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            body: JSON.stringify(bookingData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            // Redirect to confirmation page
+            window.location.href = `/confirmation/?pnr=${result.pnr}`;
+        } else {
+            alert('Booking failed: ' + (result.error || 'Unknown error occurred'));
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-credit-card"></i> Proceed to Payment';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Booking failed: ' + error.message);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-credit-card"></i> Proceed to Payment';
+    }
+});
+
+// Validate seat number format in real-time
+document.getElementById('seat_number').addEventListener('change', function() {
+    const value = this.value.trim().toUpperCase();
+    const pattern = /^[0-9]{1,2}[A-Z]$/;
+    
+    if (value && !pattern.test(value)) {
+        this.classList.add('is-invalid');
+        this.title = 'Invalid format. Use format like: 1A, 32C, 45D';
+    } else {
+        this.classList.remove('is-invalid');
+        this.value = value;
+    }
+});
+
+// Auto-format seat number
+document.getElementById('seat_number').addEventListener('input', function() {
+    this.value = this.value.toUpperCase();
+});
+</script>
+{% endblock %}

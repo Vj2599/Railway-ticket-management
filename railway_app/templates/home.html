@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% block title %}Book Tickets - Railway Ticket System{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- Login Section for Non-Authenticated Users -->
+    {% if not user.is_authenticated %}
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-8">
+            <div class="card border-primary">
+                <div class="card-body text-center p-4">
+                    <h4 class="card-title text-primary mb-3">
+                        <i class="bi bi-person-circle"></i> Already have an account?
+                    </h4>
+                    <p class="card-text text-muted mb-3">
+                        Login to access connecting train routes and manage your bookings.
+                    </p>
+                    <a href="{% url 'login' %}" class="btn btn-primary btn-lg">
+                        <i class="bi bi-box-arrow-in-right"></i> Login Now
+                    </a>
+                    <p class="mt-3 mb-0">
+                        <small class="text-muted">Don't have an account? <a href="{% url 'register' %}" class="text-decoration-none">Register here</a></small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card mx-auto" style="max-width: 600px;">
+        <div class="card-body p-5">
+            <h1 class="card-title text-center mb-4">
+                <i class="bi bi-ticket-perforated text-primary"></i> Book Your Ticket
+            </h1>
+            
+            <form id="searchForm">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label class="form-label">From Station</label>
+                    <input type="text" class="form-control" id="source" placeholder="Enter departure station" required>
+                    <input type="hidden" id="source_id">
+                    <div id="sourceDropdown" class="list-group mt-2"></div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">To Station</label>
+                    <input type="text" class="form-control" id="destination" placeholder="Enter destination" required>
+                    <input type="hidden" id="destination_id">
+                    <div id="destDropdown" class="list-group mt-2"></div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Journey Date</label>
+                    <input type="date" class="form-control" id="journey_date" required>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Seat Class</label>
+                    <select class="form-control" id="seat_class">
+                        <option value="SLEEPER">Sleeper</option>
+                        <option value="GENERAL">General</option>
+                        <option value="AC_3_TIER">AC 3-Tier</option>
+                        <option value="AC_2_TIER">AC 2-Tier</option>
+                        <option value="AC_FIRST">AC First</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Search Trains
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Station autocomplete
+function setupAutocomplete(inputId, hiddenId, dropdownId) {
+    const input = document.getElementById(inputId);
+    const hidden = document.getElementById(hiddenId);
+    const dropdown = document.getElementById(dropdownId);
+    
+    input.addEventListener('input', async (e) => {
+        const query = e.target.value;
+        if (query.length < 2) {
+            dropdown.innerHTML = '';
+            return;
+        }
+        
+        const response = await fetch(`/api/stations/?q=${query}`);
+        const stations = await response.json();
+        
+        dropdown.innerHTML = stations.map(s => `
+            <button type="button" class="list-group-item list-group-item-action">
+                ${s.text}
+            </button>
+        `).join('');
+        
+        dropdown.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const station = stations[Array.from(dropdown.children).indexOf(btn)];
+                input.value = station.text;
+                hidden.value = station.id;
+                dropdown.innerHTML = '';
+            });
+        });
+    });
+}
+
+setupAutocomplete('source', 'source_id', 'sourceDropdown');
+setupAutocomplete('destination', 'destination_id', 'destDropdown');
+
+// Set minimum date to today
+document.getElementById('journey_date').min = new Date().toISOString().split('T')[0];
+
+// Search form submit
+document.getElementById('searchForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const source_id = document.getElementById('source_id').value;
+    const destination_id = document.getElementById('destination_id').value;
+    const journey_date = document.getElementById('journey_date').value;
+    const seat_class = document.getElementById('seat_class').value;
+    
+    if (!source_id || !destination_id) {
+        alert('Please select valid stations');
+        return;
+    }
+    
+    const response = await fetch('/search/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        },
+        body: JSON.stringify({
+            source_id, destination_id, journey_date, seat_class
+        })
+    });
+    
+    const data = await response.json();
+    
+    // Redirect to results page
+    window.location.href = `/search-results/?source_id=${source_id}&destination_id=${destination_id}&journey_date=${journey_date}&seat_class=${seat_class}`;
+});
+</script>
+{% endblock %}

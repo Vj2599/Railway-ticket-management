@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% block title %}My Bookings - Railway Ticket System{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4"><i class="bi bi-ticket-perforated"></i> My Bookings</h1>
+            
+            {% if bookings %}
+                <div class="row">
+                    {% for booking in bookings %}
+                    <div class="col-md-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">PNR: {{ booking.pnr }}</h5>
+                                <span class="badge 
+                                    {% if booking.status == 'CONFIRMED' %}bg-success
+                                    {% elif booking.status == 'PENDING' %}bg-warning
+                                    {% else %}bg-danger{% endif %}">
+                                    {{ booking.get_status_display }}
+                                </span>
+                            </div>
+                            
+                            <div class="card-body">
+                                <!-- Passenger Info -->
+                                <div class="mb-3">
+                                    <strong>{{ booking.passenger_name }}</strong><br>
+                                    <small class="text-muted">{{ booking.passenger_email }} | {{ booking.passenger_phone }}</small>
+                                </div>
+                                
+                                <!-- Journey Info -->
+                                <div class="mb-3">
+                                    <div class="row">
+                                        {% for leg in booking.legs.all %}
+                                        <div class="col-12 mb-2">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span><strong>{{ leg.route.train.train_number }}</strong></span>
+                                                <span class="text-muted">{{ leg.route.source.code }} → {{ leg.route.destination.code }}</span>
+                                            </div>
+                                            <small class="text-muted">
+                                                {{ leg.schedule.departure_time|time:"H:i" }} - {{ leg.schedule.arrival_time|time:"H:i" }} | 
+                                                Seat: {{ leg.seat_number }}
+                                            </small>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                
+                                <!-- Booking Details -->
+                                <div class="row mb-3">
+                                    <div class="col-6">
+                                        <strong>Journey Date:</strong><br>
+                                        {{ booking.journey_date|date:"d/m/Y" }}
+                                    </div>
+                                    <div class="col-6">
+                                        <strong>Class:</strong><br>
+                                        {{ booking.get_seat_class_display }}
+                                    </div>
+                                </div>
+                                
+                                <div class="row mb-3">
+                                    <div class="col-6">
+                                        <strong>Booked On:</strong><br>
+                                        {{ booking.booking_date|date:"d/m/Y H:i" }}
+                                    </div>
+                                    <div class="col-6">
+                                        <strong>Total Fare:</strong><br>
+                                        <span class="text-success fw-bold">₹{{ booking.total_fare }}</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Action Buttons -->
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'download_ticket' booking.pnr %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-download"></i> Download
+                                    </a>
+                                    
+                                    {% if booking.status == 'CONFIRMED' and booking.journey_date > booking.booking_date.date %}
+                                    <form method="post" action="{% url 'cancel_booking' booking.pnr %}" class="d-inline" 
+                                          onsubmit="return confirm('Are you sure you want to cancel this booking? Cancellation charges may apply.')">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-x-circle"></i> Cancel
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-ticket-perforated text-muted" style="font-size: 4rem;"></i>
+                    <h3 class="text-muted mt-3">No Bookings Found</h3>
+                    <p class="text-muted">You haven't made any bookings yet.</p>
+                    <a href="{% url 'home' %}" class="btn btn-primary">
+                        <i class="bi bi-search"></i> Search Trains
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard - Railway Ticket System{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="mb-4"><i class="bi bi-speedometer2"></i> Admin Dashboard</h1>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Total Trains</h5>
+                            <h2 class="mb-0">{{ total_trains }}</h2>
+                        </div>
+                        <i class="bi bi-train-front-fill" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Total Stations</h5>
+                            <h2 class="mb-0">{{ total_stations }}</h2>
+                        </div>
+                        <i class="bi bi-geo-alt-fill" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Total Bookings</h5>
+                            <h2 class="mb-0">{{ total_bookings }}</h2>
+                        </div>
+                        <i class="bi bi-ticket-perforated-fill" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Revenue</h5>
+                            <h2 class="mb-0">₹{{ total_revenue|floatformat:0 }}</h2>
+                        </div>
+                        <i class="bi bi-currency-rupee" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Management Links -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-gear"></i> Management</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'manage_trains' %}" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-train-front"></i><br>
+                                Manage Trains
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'manage_stations' %}" class="btn btn-outline-success w-100">
+                                <i class="bi bi-geo-alt"></i><br>
+                                Manage Stations
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'manage_routes' %}" class="btn btn-outline-info w-100">
+                                <i class="bi bi-signpost"></i><br>
+                                Manage Routes
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'manage_schedules' %}" class="btn btn-outline-warning w-100">
+                                <i class="bi bi-calendar"></i><br>
+                                Manage Schedules
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'manage_bookings' %}" class="btn btn-outline-danger w-100">
+                                <i class="bi bi-ticket"></i><br>
+                                Manage Bookings
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="{% url 'analytics' %}" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-graph-up"></i><br>
+                                Analytics
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <a href="/admin/" class="btn btn-outline-dark w-100">
+                                <i class="bi bi-shield-lock"></i><br>
+                                Django Admin
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
